@@ -26,11 +26,6 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            
-            
-            
-            
-            
         </activity>
 
         <service
@@ -41,15 +36,13 @@
             android:name="com.esri.android.geotrigger.MessageReceiver"
             android:permission="com.google.android.c2dm.permission.SEND">
           <intent-filter>
-              <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-            <action android:name="com.esri.android.action.PUSH_MESSAGE_RECEIVED" />
-            <action android:name="com.esri.android.action.LOCATION_UPDATE_RECEIVED" />
             <action android:name="com.google.android.c2dm.intent.RECEIVE" />
             <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+            <action android:name="com.esri.android.action.PUSH_MESSAGE_RECEIVED" />
+            <action android:name="com.esri.android.action.LOCATION_UPDATE_RECEIVED" />
             <category android:name="com.esri.android.geotrigger.sample" />
           </intent-filter>
         </receiver>
-
         <!--
         This meta-data is required when using Google Play Services revision 13.
         It is either a bug or an undocumented requirement, and may (or may not) be necessary going forward.

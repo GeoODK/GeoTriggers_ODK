@@ -1,7 +1,6 @@
 package com.esri.android.geotrigger.sample;
 
 import android.app.Activity;
-import android.content.Context;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,7 +8,6 @@ import android.widget.Toast;
 import com.esri.android.geotrigger.GeotriggerApiClient;
 import com.esri.android.geotrigger.GeotriggerApiListener;
 import com.esri.android.geotrigger.GeotriggerBroadcastReceiver;
-import com.esri.android.geotrigger.GeotriggerBroadcastReceiver.PushMessageListener;
 import com.esri.android.geotrigger.GeotriggerService;
 import com.esri.android.geotrigger.TriggerBuilder;
 
@@ -19,8 +17,7 @@ import org.json.JSONObject;
 public class GeotriggerActivity extends Activity implements
         GeotriggerBroadcastReceiver.LocationUpdateListener,
         GeotriggerBroadcastReceiver.DeviceReadyListener,
-        GeotriggerBroadcastReceiver.PushMessageListener
-   {
+        GeotriggerBroadcastReceiver.PushMessageListener{
     private static final String TAG = "GeotriggerActivity";
     private static final int PLAY_SERVICES_REQUEST_CODE = 1;
 
@@ -33,7 +30,7 @@ public class GeotriggerActivity extends Activity implements
     // A list of initial tags to apply to the device.
     // Triggers created on the server for this application, with at least one of these same tags,
     // will be active for the device.
-    private static final String[] TAGS = new String[] {"GeoODK", "Android"};
+    private static final String[] TAGS = new String[] {"GeoODK", "GeoODK"};
 
     // The GeotriggerBroadcastReceiver receives intents from the
     // GeotriggerService, calling any listeners implemented in your class.
@@ -87,12 +84,28 @@ public class GeotriggerActivity extends Activity implements
         Toast.makeText(this, "Device Registered!", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "Device registered!");
     }
-    @Override
-    public  void onPushMessage(Bundle notification) {
-        // The notification Bundle has these keys: 'text', 'url', 'sound', 'icon', data'
-        String msg = String.format("Push Message Received: %s", notification.get("text"));
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    
+    public void runTrigger() {
+        JSONObject params = new JSONObject();
+        try {
+            params.put("triggerIds", "071db015eba438c06acc1d40504a4e36");
+        } catch (JSONException e) {
+            Log.e(TAG, "Error testing trigger with trigger/run.", e);
+        }
+
+        GeotriggerApiClient.runRequest(this, "trigger/run", params, new GeotriggerApiListener() {
+            @Override
+            public void onSuccess(JSONObject data) {
+                Log.d(TAG, "Trigger run successful: " + data.toString());
+            }
+
+            @Override
+            public void onFailure(Throwable error) {
+                Log.d(TAG, "Failed to run trigger.", error);
+            }
+        });
     }
+
     @Override
     public void onLocationUpdate(Location loc, boolean isOnDemand) {
         // Called with the GeotriggerService obtains a new location update from
@@ -105,36 +118,29 @@ public class GeotriggerActivity extends Activity implements
                 loc.getLatitude(), loc.getLongitude()));
 
         // Create the trigger if we haven't done so already.
-        //if (mShouldCreateTrigger) {
+        if (mShouldCreateTrigger) {
             // Set create trigger flag here so that we don't create multiple
             // triggers if we get a few initial updates in rapid succession.
             mShouldCreateTrigger = false;
 
             // The TriggerBuilder helps build JSON parameters for use with the
             // 'trigger/create' API route.
-            /*JSONObject params = new TriggerBuilder()
+            JSONObject params = new TriggerBuilder()
                     .setTags(TAGS[0]) // make sure to add at least one of the tags we have on the device to this trigger
                     .setGeo(loc, 100)
-                    .setDirection(TriggerBuilder.DIRECTION_ENTER)
-                    //.setDirection(TriggerBuilder.DIRECTION_LEAVE)
-                    .setNotificationText("You Entered the trigger!")
+                    .setDirection(TriggerBuilder.DIRECTION_LEAVE)
+                    .setNotificationText("You left the trigger!")
                     .build();
-*/
-            JSONObject params = new JSONObject();
-            try {
-                params.put("text", "Push notifications are working!");
-                params.put("url", "http://developers.arcgis.com");
-            } catch (JSONException e) {
-                Log.e(TAG, "Error creating device/notify params", e);
-            }
+
             // Send the request to the Geotrigger API.
-            /*GeotriggerApiClient.runRequest(this, "trigger/create", params,
+            GeotriggerApiClient.runRequest(this, "trigger/create", params,
                     new GeotriggerApiListener() {
                 @Override
                 public void onSuccess(JSONObject data) {
                     Toast.makeText(GeotriggerActivity.this, "Trigger created!",
                             Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "Trigger Created");
+                    runTrigger();
                 }
 
                 @Override
@@ -144,20 +150,16 @@ public class GeotriggerActivity extends Activity implements
                     mShouldCreateTrigger = true;
                 }
             });
-            */
-            GeotriggerApiClient.runRequest(this, "device/notify", params, new GeotriggerApiListener() {
-                @Override
-                public void onSuccess(JSONObject json) {
-                    Log.i(TAG, "device/notify success: " + json);
-                    Toast.makeText(GeotriggerActivity.this, "Sent Success"+json,
-                            Toast.LENGTH_SHORT).show();
-                }
-
-                @Override
-                public void onFailure(Throwable error) {
-                    Log.e(TAG, "device/notify failure", error);
-                }
-            });
-        //}
+        }
     }
+
+	@Override
+	public void onPushMessage(Bundle data) {
+		// TODO Auto-generated method stub
+		Toast.makeText(GeotriggerActivity.this, "Push Received!",
+                Toast.LENGTH_SHORT).show();
+		
+	}
+
+
 }
